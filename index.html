@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="app">
+      <div class="background gradient">
+        <ul class="bg-bubbles">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
+     <div class="myForm">
+      <form id="myForm">
+        <input type="text" id="amount" placeholder="Enter amount" /> <br />
+        <input type="text" id="order_no" placeholder="Enter order no"/> <br />
+        <button>Submit</button>
+      </form>
+     </div>
+    </div>
+  </body>
+
+  <script>
+    document
+      .getElementById("myForm")
+      .addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const amount = document.getElementById("amount").value;
+        const orderNo = document.getElementById("order_no").value;
+
+        try {
+          const response = await fetch(
+            "http://m365.ph:8080/api/v1/consumer/public/get-sign",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                amount: amount,
+                mchOrderNo: orderNo,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Something went wrong");
+          }
+
+          const result = await response.json();
+          console.log("Success:", result);
+
+          if (result) {
+            try {
+              const response = await fetch(
+                "http://www.m365.ph:8029/api/pay/unifiedOrder",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(
+                    result
+                  ),
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("Something went wrong");
+              }
+
+              const unifiedOrder = await response.json();
+              console.log("unifiedOrder:", unifiedOrder);
+              window.location.href = unifiedOrder.data.payData;
+            } catch (error) {
+              console.error("Error:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      });
+  </script>
+</html>
